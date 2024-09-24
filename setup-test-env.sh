@@ -6,7 +6,7 @@ NERDCTL_VERSION=1.7.6
 BUILDKIT_VERSION=0.15.2
 CNI_VERSION=1.5.1
 
-apt update && apt install -y make gcc linux-libc-dev libseccomp-dev pkg-config git
+apt update && apt install -y make gcc linux-libc-dev libseccomp-dev pkg-config git libc6-compat zlib-dev
 
 # Download and install containerd
 curl -sSL --output /tmp/containerd.tgz https://github.com/containerd/containerd/releases/download/v${CONTAINERD_VERSION}/containerd-${CONTAINERD_VERSION}-linux-${TARGETARCH:-amd64}.tar.gz
