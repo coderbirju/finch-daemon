@@ -50,8 +50,14 @@ jobs:
         run: go install github.com/google/go-licenses@latest
       - name: Create Third Party Licences File
         run: make licenses
-      - name: setup static dependecies
-        run: sudo apt-get install glibc-static libstdc++-static
+      - name: Install Dependencies for e2e Testing
+        run: ./setup-test-env.sh
+      # - name: setup static dependecies
+      #   run: |
+      #     sudo apt-get update
+      #     sudo apt-get install glibc-static libstdc++-static
+      #     sudo apt install libstdc++-12-dev
+      #     sudo apt-get install libc6-dev
       - name: Create release binaries
         run: make RELEASE_TAG=${{ env.RELEASE_TAG }} release
       - name: Verify Release version
