@@ -17,21 +17,27 @@ ifndef GODEBUG
 	EXTRA_LDFLAGS += -s -w
 endif
 
+PACKAGE := github.com/runfinch/finch-daemon
+VERSION ?= $(shell git describe --match 'v[0-9]*' --dirty='.modified' --always --tags)
+GITCOMMIT := $(shell git rev-parse HEAD)$(shell if ! git diff --no-ext-diff --quiet --exit-code; then echo .m; fi)
+BINARY ?= finch-daemon
+
+LDFLAGS_BASE := -X $(PACKAGE)/version.Version=$(VERSION) -X $(PACKAGE)/version.GitCommit=$(GITCOMMIT) $(EXTRA_LDFLAGS)
+
 .PHONY: build
 build:
-	$(eval PACKAGE := github.com/runfinch/finch-daemon)
-	$(eval VERSION ?= $(shell git describe --match 'v[0-9]*' --dirty='.modified' --always --tags))
-	$(eval GITCOMMIT := $(shell git rev-parse HEAD)$(shell if ! git diff --no-ext-diff --quiet --exit-code; then echo .m; fi))
-ifneq ($(STATIC),)
-	$(eval GO_BUILDTAGS := osusergo netgo)
-	$(eval LDFLAGS := "-X $(PACKAGE)/version.Version=$(VERSION) -X $(PACKAGE)/version.GitCommit=$(GITCOMMIT) $(EXTRA_LDFLAGS) -extldflags '-static'")
-	@echo "Building Static Binary"
-else
+ifeq ($(STATIC),)
 	@echo "Building Dynamic Binary"
-	$(eval LDFLAGS := "-X $(PACKAGE)/version.Version=$(VERSION) -X $(PACKAGE)/version.GitCommit=$(GITCOMMIT) $(EXTRA_LDFLAGS)")
+	$(eval LDFLAGS := $(LDFLAGS_BASE))
+else
+	@echo "Building Static Binary"
+	$(eval GO_BUILDTAGS := osusergo netgo)
+	$(eval LDFLAGS := $(LDFLAGS_BASE) -extldflags '-static')
 endif
-	GOOS=linux go build $(if $(GO_BUILDTAGS), -tags "$(GO_BUILDTAGS)")  -ldflags $(LDFLAGS) $(if $(STATIC), ) -v -o $(BINARY) $(PACKAGE)/cmd/finch-daemon
-
+	GOOS=linux go build \
+		$(if $(GO_BUILDTAGS),-tags "$(GO_BUILDTAGS)") \
+		-ldflags "$(LDFLAGS)" \
+		-v -o $(BINARY) $(PACKAGE)/cmd/finch-daemon
 clean:
 	@rm -f $(BINARIES)
 	@rm -rf $(BIN)
