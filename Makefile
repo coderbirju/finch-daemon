@@ -17,6 +17,7 @@ PACKAGE := github.com/runfinch/finch-daemon
 VERSION := $(shell git describe --match 'v[0-9]*' --dirty='.modified' --always --tags)
 GITCOMMIT := $(shell git rev-parse HEAD)$(shell if ! git diff --no-ext-diff --quiet --exit-code; then echo .m; fi)
 
+
 ifndef GODEBUG
 	EXTRA_LDFLAGS += -s -w
 endif
@@ -40,6 +41,7 @@ endif
 clean:
 	@rm -f $(BINARIES)
 	@rm -rf $(BIN)
+
 
 .PHONY: linux
 linux:
