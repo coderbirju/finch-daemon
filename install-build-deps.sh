@@ -19,10 +19,9 @@
 #
 # Usage: bash install-build-dependencies.sh
 
-apt update && apt install -y \
-    git \
+apt -y update && apt install -y make \
     gcc \
     linux-libc-dev \
     libseccomp-dev \
     pkg-config \
-    make
+    git
