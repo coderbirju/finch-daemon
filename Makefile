@@ -30,10 +30,10 @@ ifeq ($(STATIC),)
 	$(eval LDFLAGS := $(LDFLAGS_BASE))
 else
 	@echo "Building Static Binary"
-	$(eval GO_BUILDTAGS := osusergo netgo)
+	$(eval GO_BUILDTAGS := netgo)
 	$(eval LDFLAGS := $(LDFLAGS_BASE) -extldflags '-static')
 endif
-	GOOS=linux go build \
+	CGO_ENABLED=0 GOOS=linux go build \
 		$(if $(GO_BUILDTAGS),-tags "$(GO_BUILDTAGS)") \
 		-ldflags "$(LDFLAGS)" \
 		-v -o $(BINARY) $(PACKAGE)/cmd/finch-daemon
