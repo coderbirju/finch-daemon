@@ -1,7 +1,16 @@
 name: Release Finch Daemon
 on:
-  workflow_dispatch:
-  workflow_call:
+    push:
+      branches:
+        - main
+      paths-ignore:
+        - '**.md'
+    pull_request:
+      branches:
+        - main
+      paths-ignore:
+        - '**.md'
+    workflow_dispatch:
 env:
   GO_VERSION: '1.22.7'
 permissions:
@@ -34,10 +43,12 @@ jobs:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
           fetch-tags: true
-      - uses: actions/setup-go@41dfa10bad2bb2ae585af6ee5bb4d7d973ad74ed # v5.1.0
+      - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
         with:
           go-version: ${{ env.GO_VERSION }}
           cache: false
+      - name: Install Dependencies
+        run: ./install-build-deps.sh
       - name: 'Echo RELEASE_TAG ENV'
         run: echo ${{ env.RELEASE_TAG }}
       - name: Setup variables and release directories
@@ -54,8 +65,8 @@ jobs:
         run: make licenses
       - name: setup static dependecies
         run: |
-          sudo apt-get update
-          sudo apt-get install libc6-dev -f
+          apt-get -y update
+          apt-get -y install libc6-dev -f
       - name: Create release binaries
         run: make RELEASE_TAG=${{ env.RELEASE_TAG }} release
       - name: Verify Release version
@@ -91,21 +102,23 @@ jobs:
           name: artifacts
           path: release/
       - run: bash scripts/verify-release-artifacts.sh ${{ needs.generate-artifacts.outputs.release_tag }}
-  create-release:
-    needs: [generate-artifacts, validate-artifacts]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with:
-          name: artifacts
-      - uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ needs.generate-artifacts.outputs.release_tag }}
-          prerelease: false
-          generate_release_notes: false
-          files: |
-            ${{ needs.generate-artifacts.outputs.dynamic_binary_name }}
-            ${{ needs.generate-artifacts.outputs.dynamic_binary_name }}.sha256sum
-            ${{ needs.generate-artifacts.outputs.static_binary_name }}
-            ${{ needs.generate-artifacts.outputs.static_binary_name }}.sha256sum
+#   create-release:
+#     needs: [generate-artifacts, validate-artifacts]
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v4
+#       - uses: actions/download-artifact@v4
+#         with:
+#           name: artifacts
+#       - uses: softprops/action-gh-release@v2
+#         with:
+#           tag_name: ${{ needs.generate-artifacts.outputs.release_tag }}
+#           prerelease: false
+#           generate_release_notes: false
+#           files: |
+#             ${{ needs.generate-artifacts.outputs.dynamic_binary_name }}
+#             ${{ needs.generate-artifacts.outputs.dynamic_binary_name }}.sha256sum
+#             ${{ needs.generate-artifacts.outputs.static_binary_name }}
+#             ${{ needs.generate-artifacts.outputs.static_binary_name }}.sha256sum
+
+
