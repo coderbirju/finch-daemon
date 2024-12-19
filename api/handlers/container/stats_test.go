@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/containerd/nerdctl/pkg/config"
-	dockertypes "github.com/docker/docker/api/types"
+	container "github.com/docker/docker/api/types"
 	"github.com/golang/mock/gomock"
 	"github.com/gorilla/mux"
 	. "github.com/onsi/ginkgo/v2"
@@ -52,9 +52,9 @@ var _ = Describe("Container Stats API ", func() {
 			ID:   cid,
 			Name: "test-container",
 		}
-		statsData.PidsStats = dockertypes.PidsStats{Current: 10, Limit: 20}
+		statsData.PidsStats = container.PidsStats{Current: 10, Limit: 20}
 		statsData.CPUStats = types.CPUStats{
-			CPUUsage: dockertypes.CPUUsage{
+			CPUUsage: container.CPUUsage{
 				TotalUsage:        1000,
 				UsageInKernelmode: 500,
 				UsageInUsermode:   250,
@@ -63,7 +63,7 @@ var _ = Describe("Container Stats API ", func() {
 			SystemUsage: 2500,
 			OnlineCPUs:  3,
 		}
-		statsData.MemoryStats = dockertypes.MemoryStats{
+		statsData.MemoryStats = container.MemoryStats{
 			Usage:    250,
 			Limit:    1000,
 			MaxUsage: 500,

@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"time"
 
-	dockertypes "github.com/docker/docker/api/types"
+	container "github.com/docker/docker/api/types"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/runfinch/common-tests/command"
@@ -283,9 +283,9 @@ func expectEmptyStats(st *types.StatsJSON, name, id string) {
 
 	Expect(st.Read).Should(Equal(time.Time{}))
 	Expect(st.PreRead).Should(Equal(time.Time{}))
-	Expect(st.PidsStats).Should(Equal(dockertypes.PidsStats{}))
-	Expect(st.BlkioStats).Should(Equal(dockertypes.BlkioStats{}))
+	Expect(st.PidsStats).Should(Equal(container.PidsStats{}))
+	Expect(st.BlkioStats).Should(Equal(container.BlkioStats{}))
 	Expect(st.CPUStats).Should(Equal(types.CPUStats{}))
 	Expect(st.PreCPUStats).Should(Equal(types.CPUStats{}))
-	Expect(st.MemoryStats).Should(Equal(dockertypes.MemoryStats{}))
+	Expect(st.MemoryStats).Should(Equal(container.MemoryStats{}))
 }

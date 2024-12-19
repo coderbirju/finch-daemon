@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/containerd/nerdctl/pkg/inspecttypes/dockercompat"
-	dockertypes "github.com/docker/docker/api/types"
+	container "github.com/docker/docker/api/types"
 	"github.com/docker/go-connections/nat"
 )
 
@@ -205,7 +205,7 @@ type PutArchiveOptions struct {
 // From https://github.com/moby/moby/blob/v24.0.2/api/types/stats.go#L42-L55
 type CPUStats struct {
 	// CPU Usage. Linux and Windows.
-	CPUUsage dockertypes.CPUUsage `json:"cpu_usage"`
+	CPUUsage container.CPUUsage `json:"cpu_usage"`
 
 	// System Usage. Linux only.
 	SystemUsage uint64 `json:"system_cpu_usage,omitempty"`
@@ -225,17 +225,17 @@ type Stats struct {
 	PreRead time.Time `json:"preread"`
 
 	// Linux specific stats, not populated on Windows.
-	PidsStats  dockertypes.PidsStats  `json:"pids_stats,omitempty"`
-	BlkioStats dockertypes.BlkioStats `json:"blkio_stats,omitempty"`
+	PidsStats  container.PidsStats  `json:"pids_stats,omitempty"`
+	BlkioStats container.BlkioStats `json:"blkio_stats,omitempty"`
 
 	// Windows specific stats, not populated on Linux.
 	// NumProcs     uint32       `json:"num_procs"`
 	// StorageStats StorageStats `json:"storage_stats,omitempty"`
 
 	// Shared stats
-	CPUStats    CPUStats                `json:"cpu_stats,omitempty"`
-	PreCPUStats CPUStats                `json:"precpu_stats,omitempty"` // "Pre"="Previous"
-	MemoryStats dockertypes.MemoryStats `json:"memory_stats,omitempty"`
+	CPUStats    CPUStats              `json:"cpu_stats,omitempty"`
+	PreCPUStats CPUStats              `json:"precpu_stats,omitempty"` // "Pre"="Previous"
+	MemoryStats container.MemoryStats `json:"memory_stats,omitempty"`
 }
 
 // StatsJSON is the JSON response for container stats api
@@ -247,5 +247,5 @@ type StatsJSON struct {
 	ID   string `json:"id,omitempty"`
 
 	// Networks request version >=1.21
-	Networks map[string]dockertypes.NetworkStats `json:"networks,omitempty"`
+	Networks map[string]container.NetworkStats `json:"networks,omitempty"`
 }

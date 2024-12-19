@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	"github.com/containerd/nerdctl/pkg/inspecttypes/native"
-	dockertypes "github.com/docker/docker/api/types"
+	container "github.com/docker/docker/api/types"
 	"github.com/vishvananda/netlink"
 	"github.com/vishvananda/netns"
 	"golang.org/x/sys/unix"
@@ -30,7 +30,7 @@ type StatsUtil interface {
 
 	// CollectNetworkStats collects network usage statistics for specified network
 	// interfaces in a process namespace
-	CollectNetworkStats(pid int, interfaces []native.NetInterface) (map[string]dockertypes.NetworkStats, error)
+	CollectNetworkStats(pid int, interfaces []native.NetInterface) (map[string]container.NetworkStats, error)
 }
 
 const (
@@ -99,7 +99,7 @@ func (s *statsUtil) GetNumberOnlineCPUs() (uint32, error) {
 	return uint32(cpuset.Count()), nil
 }
 
-func (s *statsUtil) CollectNetworkStats(pid int, interfaces []native.NetInterface) (map[string]dockertypes.NetworkStats, error) {
+func (s *statsUtil) CollectNetworkStats(pid int, interfaces []native.NetInterface) (map[string]container.NetworkStats, error) {
 	// get network namespace of the process
 	ns, err := netns.GetFromPid(pid)
 	if err != nil {
@@ -113,7 +113,7 @@ func (s *statsUtil) CollectNetworkStats(pid int, interfaces []native.NetInterfac
 	defer nlHandle.Close()
 
 	// collect network stats for each network interface
-	networks := map[string]dockertypes.NetworkStats{}
+	networks := map[string]container.NetworkStats{}
 	for _, v := range interfaces {
 		nlink, err := nlHandle.LinkByIndex(v.Index)
 		if err != nil {
@@ -126,7 +126,7 @@ func (s *statsUtil) CollectNetworkStats(pid int, interfaces []native.NetInterfac
 				continue
 			}
 
-			net := dockertypes.NetworkStats{}
+			net := container.NetworkStats{}
 			stats := nlink.Attrs().Statistics
 			if stats != nil {
 				net.RxBytes = stats.RxBytes

@@ -17,7 +17,7 @@ import (
 	"github.com/containerd/nerdctl/pkg/inspecttypes/native"
 	"github.com/containerd/nerdctl/pkg/labels"
 	"github.com/containerd/typeurl/v2"
-	dockertypes "github.com/docker/docker/api/types"
+	container "github.com/docker/docker/api/types"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -312,7 +312,7 @@ var _ = Describe("Container Stats API ", func() {
 			task.EXPECT().Metrics(gomock.Any()).Return(metrics1, nil).AnyTimes()
 
 			// mock statsutil
-			netStats := dockertypes.NetworkStats{
+			netStats := container.NetworkStats{
 				RxBytes:   20,
 				TxBytes:   30,
 				RxPackets: 10,
@@ -325,7 +325,7 @@ var _ = Describe("Container Stats API ", func() {
 			stats.EXPECT().GetSystemCPUUsage().Return(uint64(2500), nil).MinTimes(2)
 			stats.EXPECT().GetNumberOnlineCPUs().Return(uint32(3), nil).MinTimes(2)
 			stats.EXPECT().CollectNetworkStats(pid, netNS.Interfaces).Return(
-				map[string]dockertypes.NetworkStats{"eth0": netStats}, nil).MinTimes(2)
+				map[string]container.NetworkStats{"eth0": netStats}, nil).MinTimes(2)
 
 			// service should return the stats channel
 			ctx, cancel := context.WithCancel(ctx)
@@ -340,7 +340,7 @@ var _ = Describe("Container Stats API ", func() {
 			for _, exp := range expected {
 				exp.ID = cid
 				exp.Name = cname
-				exp.Networks = map[string]dockertypes.NetworkStats{"eth0": netStats}
+				exp.Networks = map[string]container.NetworkStats{"eth0": netStats}
 			}
 
 			// check returned stats objects
@@ -393,9 +393,9 @@ func getDummyMetricsV1() (*cTypes.Metric, *types.StatsJSON) {
 
 	// expected stats object for dummy metrics
 	expected := types.StatsJSON{}
-	expected.PidsStats = dockertypes.PidsStats{Current: 10, Limit: 20}
+	expected.PidsStats = container.PidsStats{Current: 10, Limit: 20}
 	expected.CPUStats = types.CPUStats{
-		CPUUsage: dockertypes.CPUUsage{
+		CPUUsage: container.CPUUsage{
 			TotalUsage:        1000,
 			UsageInKernelmode: 500,
 			UsageInUsermode:   250,
@@ -404,7 +404,7 @@ func getDummyMetricsV1() (*cTypes.Metric, *types.StatsJSON) {
 		SystemUsage: 2500,
 		OnlineCPUs:  3,
 	}
-	expected.MemoryStats = dockertypes.MemoryStats{
+	expected.MemoryStats = container.MemoryStats{
 		Usage:    250,
 		Limit:    1000,
 		MaxUsage: 500,
@@ -435,9 +435,9 @@ func getDummyMetricsV2() (*cTypes.Metric, *types.StatsJSON) {
 
 	// expected stats object for dummy metrics
 	expected := types.StatsJSON{}
-	expected.PidsStats = dockertypes.PidsStats{Current: 20, Limit: 40}
+	expected.PidsStats = container.PidsStats{Current: 20, Limit: 40}
 	expected.CPUStats = types.CPUStats{
-		CPUUsage: dockertypes.CPUUsage{
+		CPUUsage: container.CPUUsage{
 			TotalUsage:        10000,
 			UsageInKernelmode: 20000,
 			UsageInUsermode:   7000,
@@ -445,7 +445,7 @@ func getDummyMetricsV2() (*cTypes.Metric, *types.StatsJSON) {
 		SystemUsage: 2500,
 		OnlineCPUs:  3,
 	}
-	expected.MemoryStats = dockertypes.MemoryStats{
+	expected.MemoryStats = container.MemoryStats{
 		Usage:   100,
 		Limit:   500,
 		Failcnt: 30,

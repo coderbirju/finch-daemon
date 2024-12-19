@@ -14,7 +14,7 @@ import (
 	cerrdefs "github.com/containerd/errdefs"
 	"github.com/containerd/nerdctl/pkg/labels"
 	"github.com/containerd/typeurl/v2"
-	dockertypes "github.com/docker/docker/api/types"
+	container "github.com/docker/docker/api/types"
 
 	"github.com/runfinch/finch-daemon/api/types"
 )
@@ -162,7 +162,7 @@ func collectCgroup1Stats(data *v1.Metrics) *types.StatsJSON {
 	st := types.StatsJSON{}
 
 	if data.Pids != nil {
-		st.PidsStats = dockertypes.PidsStats{
+		st.PidsStats = container.PidsStats{
 			Current: data.Pids.Current,
 			Limit:   data.Pids.Limit,
 		}
@@ -170,7 +170,7 @@ func collectCgroup1Stats(data *v1.Metrics) *types.StatsJSON {
 
 	if data.CPU != nil && data.CPU.Usage != nil {
 		st.CPUStats = types.CPUStats{
-			CPUUsage: dockertypes.CPUUsage{
+			CPUUsage: container.CPUUsage{
 				TotalUsage:        data.CPU.Usage.Total,
 				PercpuUsage:       data.CPU.Usage.PerCPU,
 				UsageInKernelmode: data.CPU.Usage.Kernel,
@@ -181,7 +181,7 @@ func collectCgroup1Stats(data *v1.Metrics) *types.StatsJSON {
 	}
 
 	if data.Memory != nil && data.Memory.Usage != nil {
-		st.MemoryStats = dockertypes.MemoryStats{
+		st.MemoryStats = container.MemoryStats{
 			Usage:    data.Memory.Usage.Usage,
 			MaxUsage: data.Memory.Usage.Max,
 			Failcnt:  data.Memory.Usage.Failcnt,
@@ -190,7 +190,7 @@ func collectCgroup1Stats(data *v1.Metrics) *types.StatsJSON {
 	}
 
 	if data.Blkio != nil {
-		st.BlkioStats = dockertypes.BlkioStats{
+		st.BlkioStats = container.BlkioStats{
 			IoServiceBytesRecursive: translateBlkioEntry(data.Blkio.IoServiceBytesRecursive),
 			IoServicedRecursive:     translateBlkioEntry(data.Blkio.IoServicedRecursive),
 			IoQueuedRecursive:       translateBlkioEntry(data.Blkio.IoQueuedRecursive),
@@ -213,7 +213,7 @@ func collectCgroup2Stats(data *v2.Metrics) *types.StatsJSON {
 	st := types.StatsJSON{}
 
 	if data.Pids != nil {
-		st.PidsStats = dockertypes.PidsStats{
+		st.PidsStats = container.PidsStats{
 			Current: data.Pids.Current,
 			Limit:   data.Pids.Limit,
 		}
@@ -221,7 +221,7 @@ func collectCgroup2Stats(data *v2.Metrics) *types.StatsJSON {
 
 	if data.CPU != nil {
 		st.CPUStats = types.CPUStats{
-			CPUUsage: dockertypes.CPUUsage{
+			CPUUsage: container.CPUUsage{
 				TotalUsage: data.CPU.UsageUsec * 1000,
 				// PercpuUsage is not supported
 				UsageInKernelmode: data.CPU.SystemUsec * 1000,
@@ -231,7 +231,7 @@ func collectCgroup2Stats(data *v2.Metrics) *types.StatsJSON {
 	}
 
 	if data.Memory != nil {
-		st.MemoryStats = dockertypes.MemoryStats{
+		st.MemoryStats = container.MemoryStats{
 			Usage: data.Memory.Usage,
 			// MaxUsage is not supported
 			Limit: data.Memory.UsageLimit,
@@ -242,16 +242,16 @@ func collectCgroup2Stats(data *v2.Metrics) *types.StatsJSON {
 	}
 
 	if data.Io != nil {
-		var isbr []dockertypes.BlkioStatEntry
+		var isbr []container.BlkioStatEntry
 		for _, re := range data.Io.Usage {
 			isbr = append(isbr,
-				dockertypes.BlkioStatEntry{
+				container.BlkioStatEntry{
 					Major: re.Major,
 					Minor: re.Minor,
 					Op:    "read",
 					Value: re.Rbytes,
 				},
-				dockertypes.BlkioStatEntry{
+				container.BlkioStatEntry{
 					Major: re.Major,
 					Minor: re.Minor,
 					Op:    "write",
@@ -259,7 +259,7 @@ func collectCgroup2Stats(data *v2.Metrics) *types.StatsJSON {
 				},
 			)
 		}
-		st.BlkioStats = dockertypes.BlkioStats{
+		st.BlkioStats = container.BlkioStats{
 			IoServiceBytesRecursive: isbr,
 			// Other fields are unsupported
 		}
@@ -268,10 +268,10 @@ func collectCgroup2Stats(data *v2.Metrics) *types.StatsJSON {
 	return &st
 }
 
-func translateBlkioEntry(entries []*v1.BlkIOEntry) []dockertypes.BlkioStatEntry {
-	out := make([]dockertypes.BlkioStatEntry, len(entries))
+func translateBlkioEntry(entries []*v1.BlkIOEntry) []container.BlkioStatEntry {
+	out := make([]container.BlkioStatEntry, len(entries))
 	for i, re := range entries {
-		out[i] = dockertypes.BlkioStatEntry{
+		out[i] = container.BlkioStatEntry{
 			Major: re.Major,
 			Minor: re.Minor,
 			Op:    re.Op,
