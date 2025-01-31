@@ -11,14 +11,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/containerd/containerd/remotes/docker"
+	"github.com/containerd/containerd/v2/core/remotes/docker"
 	cerrdefs "github.com/containerd/errdefs"
-	"github.com/containerd/nerdctl/pkg/imgutil/dockerconfigresolver"
+	"github.com/containerd/nerdctl/v2/pkg/imgutil/dockerconfigresolver"
 	dockertypes "github.com/docker/cli/cli/config/types"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 
 	"github.com/runfinch/finch-daemon/pkg/errdefs"
 )
+
+const IndexServer = "https://index.docker.io/v1/"
 
 func (s *service) Pull(ctx context.Context, name, tag, platformStr string, ac *dockertypes.AuthConfig, outStream io.Writer) error {
 	// get host platform's default spec if unspecified

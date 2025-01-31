@@ -8,7 +8,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/containerd/nerdctl/pkg/inspecttypes/dockercompat"
+	"github.com/containerd/nerdctl/v2/pkg/inspecttypes/dockercompat"
 	dockertypes "github.com/docker/docker/api/types/container"
 	"github.com/docker/go-connections/nat"
 	"github.com/docker/go-units"
@@ -173,8 +173,8 @@ type Container struct {
 	// TODO: ExecIDs         []string
 	// TODO: HostConfig      *container.HostConfig
 	// TODO: GraphDriver     GraphDriverData
-	// TODO: SizeRw     *int64 `json:",omitempty"`
-	// TODO: SizeRootFs *int64 `json:",omitempty"`
+	SizeRw     *int64 `json:",omitempty"`
+	SizeRootFs *int64 `json:",omitempty"`
 
 	Mounts          []dockercompat.MountPoint
 	Config          *ContainerConfig
