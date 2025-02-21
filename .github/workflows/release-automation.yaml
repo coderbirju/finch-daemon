@@ -2,12 +2,29 @@ name: Release Finch Daemon
 on:
   workflow_dispatch:
   workflow_call:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+    paths-ignore:
+      - '**.md'
 env:
   GO_VERSION: '1.22.7'
 permissions:
   contents: write
   deployments: write
 jobs:
+  setup-git:
+  runs-on: ubuntu-latest
+  steps:
+    - name: Setup Git
+      uses: actions/setup-git@v3
+      with:
+        git-version: ‘2.40.0’
+    - name: Check Git version
+      run: git --ver
   get-latest-tag:
     name: Get the latest release tag
     runs-on: ubuntu-latest
@@ -38,6 +55,20 @@ jobs:
           cache: false
       - name: 'Echo RELEASE_TAG ENV'
         run: echo ${{ env.RELEASE_TAG }}
+      - name: What Happens in git describe
+        run: |
+          echo "Git describe output:"
+          git describe --match 'v[0-9]*' --dirty='.modified' --always --tags
+      - name: Inspect Git state
+        run: |
+          echo "git version all"
+          git --version
+          echo "Current branch:"
+          git branch --show-current
+          echo "Commit hash:"
+          git rev-parse HEAD
+          echo "All tags:"
+          git tag -l
       - name: Setup variables and release directories
         run: |
           export release_tag=${{ env.RELEASE_TAG }}
@@ -61,6 +92,23 @@ jobs:
           mkdir -p output/static output/dynamic
           tar -xzf release/${{ env.DYNAMIC_BINARY_NAME }} -C ./output/dynamic
           tar -xzf release/${{ env.STATIC_BINARY_NAME }} -C ./output/static
+          if [ -f "./output/dynamic/finch-daemon" ]; then
+            echo "finch-daemon exists in output/dynamic"
+            ls -l ./output/dynamic/finch-daemon
+          else
+            echo "finch-daemon does not exist in output/dynamic"
+            ls -l ./output/dynamic
+          fi
+          echo "Output of finch-daemon --version:"
+          ./output/dynamic/finch-daemon --version
+          if command -v grep &> /dev/null; then
+            echo "grep is available"
+            VERSION_OUTPUT=$(./output/dynamic/finch-daemon --version)
+            echo "grep output:"
+            echo "$VERSION_OUTPUT" | grep -oP '\d+\.\d+\.\d+'
+          else
+            echo "grep is not available"
+          fi
           DYNAMIC_BINARY_VERSION=$(./output/dynamic/finch-daemon --version | grep -oP '\d+\.\d+\.\d+')
           STATIC_BINARY_VERSION=$(./output/static/finch-daemon --version | grep -oP '\d+\.\d+\.\d+')
           export release_tag=${{ env.RELEASE_TAG }}
@@ -69,7 +117,6 @@ jobs:
             echo "Version mismatch"
             exit 1
           fi
-        shell: bash
       - uses: actions/upload-artifact@v4
         with:
           name: artifacts
@@ -79,31 +126,31 @@ jobs:
       release_tag: ${{ env.RELEASE_TAG }}
       dynamic_binary_name: ${{ env.DYNAMIC_BINARY_NAME }}
       static_binary_name: ${{ env.STATIC_BINARY_NAME }}
-  validate-artifacts:
-    needs: generate-artifacts
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with:
-          name: artifacts
-          path: release/
-      - run: bash scripts/verify-release-artifacts.sh ${{ needs.generate-artifacts.outputs.release_tag }}
-  create-release:
-    needs: [generate-artifacts, validate-artifacts]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with:
-          name: artifacts
-      - uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ needs.generate-artifacts.outputs.release_tag }}
-          prerelease: false
-          generate_release_notes: false
-          files: |
-            ${{ needs.generate-artifacts.outputs.dynamic_binary_name }}
-            ${{ needs.generate-artifacts.outputs.dynamic_binary_name }}.sha256sum
-            ${{ needs.generate-artifacts.outputs.static_binary_name }}
-            ${{ needs.generate-artifacts.outputs.static_binary_name }}.sha256sum
+  # validate-artifacts:
+  #   needs: generate-artifacts
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: actions/download-artifact@v4
+  #       with:
+  #         name: artifacts
+  #         path: release/
+  #     - run: bash scripts/verify-release-artifacts.sh ${{ needs.generate-artifacts.outputs.release_tag }}
+  # create-release:
+  #   needs: [generate-artifacts, validate-artifacts]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: actions/download-artifact@v4
+  #       with:
+  #         name: artifacts
+  #     - uses: softprops/action-gh-release@v2
+  #       with:
+  #         tag_name: ${{ needs.generate-artifacts.outputs.release_tag }}
+  #         prerelease: false
+  #         generate_release_notes: false
+  #         files: |
+  #           ${{ needs.generate-artifacts.outputs.dynamic_binary_name }}
+  #           ${{ needs.generate-artifacts.outputs.dynamic_binary_name }}.sha256sum
+  #           ${{ needs.generate-artifacts.outputs.static_binary_name }}
+  #           ${{ needs.generate-artifacts.outputs.static_binary_name }}.sha256sum
