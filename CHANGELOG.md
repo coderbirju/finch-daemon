@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.15.1](https://github.com/coderbirju/finch-daemon/compare/v0.15.0...v0.15.1) (2025-02-21)
+
+
+### Bug Fixes
+
+* stealth ([015b2ad](https://github.com/coderbirju/finch-daemon/commit/015b2ad75cc1d47e0920ae5709cf8dccc7d6d404))
+
 ## [0.15.0](https://github.com/coderbirju/finch-daemon/compare/v0.14.0...v0.15.0) (2025-02-21)
 
 
