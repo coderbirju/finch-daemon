@@ -302,6 +302,7 @@ var _ = Describe("Container Create API ", func() {
 			body := []byte(`{
 				"Image": "test-image",
 				"Hostname": "test-host",
+				"Domainname": "",
 				"HostConfig": {
 					"DNS": ["8.8.8.8"],
 					"DNSOptions": ["test-opt"],
@@ -313,6 +314,38 @@ var _ = Describe("Container Create API ", func() {
 
 			// expected network options
 			netOpt.Hostname = "test-host"
+			netOpt.Domainname = ""
+			netOpt.DNSServers = []string{"8.8.8.8"}
+			netOpt.DNSResolvConfOptions = []string{"test-opt"}
+			netOpt.DNSSearchDomains = []string{"test.com"}
+			netOpt.AddHost = []string{"test-host:127.0.0.1"}
+
+			service.EXPECT().Create(gomock.Any(), "test-image", nil, equalTo(createOpt), equalTo(netOpt)).Return(
+				cid, nil)
+
+			// handler should return success message with 201 status code.
+			h.create(rr, req)
+			Expect(rr).Should(HaveHTTPStatus(http.StatusCreated))
+			Expect(rr.Body).Should(MatchJSON(jsonResponse))
+		})
+
+		It("should set specified domainname", func() {
+			body := []byte(`{
+				"Image": "test-image",
+				"Hostname": "test-host",
+				"Domainname": "test.com",
+				"HostConfig": {
+					"DNS": ["8.8.8.8"],
+					"DNSOptions": ["test-opt"],
+					"DNSSearch": ["test.com"],
+					"ExtraHosts": ["test-host:127.0.0.1"]
+				}
+			}`)
+			req, _ := http.NewRequest(http.MethodPost, "/containers/create", bytes.NewReader(body))
+
+			// expected network options
+			netOpt.Hostname = "test-host"
+			netOpt.Domainname = "test.com"
 			netOpt.DNSServers = []string{"8.8.8.8"}
 			netOpt.DNSResolvConfOptions = []string{"test-opt"}
 			netOpt.DNSSearchDomains = []string{"test.com"}
