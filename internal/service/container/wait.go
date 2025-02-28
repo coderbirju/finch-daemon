@@ -6,34 +6,25 @@ package container
 import (
 	"context"
 
-	containerd "github.com/containerd/containerd/v2/client"
+	cerrdefs "github.com/containerd/errdefs"
+	ncTypes "github.com/containerd/nerdctl/v2/pkg/api/types"
+	"github.com/runfinch/finch-daemon/pkg/errdefs"
 )
 
-func (s *service) Wait(ctx context.Context, cid string, condition string) (code int64, err error) {
-	con, err := s.getContainer(ctx, cid)
-	// container wait status code is uint32, use -1 to indicate container search error
+func (s *service) Wait(ctx context.Context, cid string, condition string, options ncTypes.ContainerWaitOptions) error {
+	cont, err := s.getContainer(ctx, cid)
 	if err != nil {
-		return -1, err
-	}
-	s.logger.Debugf("wait container: %s", con.ID())
-	rawcode, err := waitContainer(ctx, con)
-	return int64(rawcode), err
-}
-
-// TODO: contribute to nerdctl to make this function public.
-func waitContainer(ctx context.Context, container containerd.Container) (code uint32, err error) {
-	task, err := container.Task(ctx, nil)
-	if err != nil {
-		return 0, err
+		if cerrdefs.IsNotFound(err) {
+			return errdefs.NewNotFound(err)
+		}
+		return err
 	}
 
-	statusC, err := task.Wait(ctx)
+	s.logger.Debugf("wait container: %s", cont.ID())
+	err = s.nctlContainerSvc.ContainerWait(ctx, cont.ID(), options)
 	if err != nil {
-		return 0, err
+		return err
 	}
 
-	status := <-statusC
-	code, _, err = status.Result()
-
-	return code, err
+	return nil
 }
