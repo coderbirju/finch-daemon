@@ -256,18 +256,17 @@ func (mr *MockServiceMockRecorder) Stop(arg0, arg1, arg2 interface{}) *gomock.Ca
 }
 
 // Wait mocks base method.
-func (m *MockService) Wait(arg0 context.Context, arg1, arg2 string) (int64, error) {
+func (m *MockService) Wait(arg0 context.Context, arg1, arg2 string, arg3 types.ContainerWaitOptions) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Wait", arg0, arg1, arg2)
-	ret0, _ := ret[0].(int64)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret := m.ctrl.Call(m, "Wait", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // Wait indicates an expected call of Wait.
-func (mr *MockServiceMockRecorder) Wait(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *MockServiceMockRecorder) Wait(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Wait", reflect.TypeOf((*MockService)(nil).Wait), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Wait", reflect.TypeOf((*MockService)(nil).Wait), arg0, arg1, arg2, arg3)
 }
 
 // WriteFilesAsTarArchive mocks base method.
