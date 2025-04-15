@@ -29,7 +29,7 @@ func (h *handler) stop(w http.ResponseWriter, r *http.Request) {
 	signal := getSignal(r)
 	if signal == "" {
 		signal = "SIGTERM" // Docker/nerdctl default
-		logrus.Infof("Setting default %s to stop container", signal)
+		logrus.Debugf("Setting default %s to stop container", signal)
 	}
 
 	// discard unwanted logs by writing to /dev/null
