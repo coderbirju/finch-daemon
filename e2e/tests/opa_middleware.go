@@ -8,6 +8,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -105,49 +109,49 @@ func OpaMiddlewareTest(opt *option.Option) {
 		})
 
 		// Add this test to OpaMiddlewareTest function
-		// It("should handle rego file permissions correctly", func() {
-		// 	// Create a temporary rego file with overly permissive permissions
-		// 	tmpDir, err := os.MkdirTemp("", "rego_test")
-		// 	Expect(err).NotTo(HaveOccurred())
-		// 	defer os.RemoveAll(tmpDir)
+		It("should handle rego file permissions correctly", func() {
+			// Create a temporary rego file with overly permissive permissions
+			tmpDir, err := os.MkdirTemp("", "rego_test")
+			Expect(err).NotTo(HaveOccurred())
+			defer os.RemoveAll(tmpDir)
 
-		// 	regoPath := filepath.Join(tmpDir, "test.rego")
-		// 	regoContent := []byte(`package finch.authz
-		// 	default allow = false`)
+			regoPath := filepath.Join(tmpDir, "test.rego")
+			regoContent := []byte(`package finch.authz
+			default allow = false`)
 
-		// 	err = os.WriteFile(regoPath, regoContent, 0644)
-		// 	Expect(err).NotTo(HaveOccurred())
+			err = os.WriteFile(regoPath, regoContent, 0644)
+			Expect(err).NotTo(HaveOccurred())
 
-		// 	// Try to start daemon with overly permissive file
-		// 	cmd := exec.Command(GetFinchDaemonExe(), //nolint:gosec // G204: This is a test file with controlled inputs
-		// 		"--socket-addr", "/run/test.sock",
-		// 		"--pidfile", "/run/test.pid",
-		// 		"--rego-file", regoPath,
-		// 		"--enable-middleware")
-		// 	output, err := cmd.CombinedOutput()
+			// Try to start daemon with overly permissive file
+			cmd := exec.Command(GetFinchDaemonExe(), //nolint:gosec // G204: This is a test file with controlled inputs
+				"--socket-addr", "/run/test.sock",
+				"--pidfile", "/run/test.pid",
+				"--rego-file", regoPath,
+				"--enable-middleware")
+			output, err := cmd.CombinedOutput()
 
-		// 	// Should fail due to permissions
-		// 	Expect(err).To(HaveOccurred())
-		// 	Expect(string(output)).To(ContainSubstring("rego file permissions 644 are too permissive - must be no more permissive than 0600"))
+			// Should fail due to permissions
+			Expect(err).To(HaveOccurred())
+			Expect(string(output)).To(ContainSubstring("rego file permissions 644 are too permissive - must be no more permissive than 0600"))
 
-		// 	// For the second test with skip-check:
-		// 	cmd = exec.Command(GetFinchDaemonExe(), //nolint:gosec // G204: This is a test file with controlled inputs
-		// 		"--socket-addr", "/run/test.sock",
-		// 		"--pidfile", "/run/test.pid",
-		// 		"--rego-file", regoPath,
-		// 		"--enable-middleware",
-		// 		"--skip-rego-perm-check")
+			// For the second test with skip-check:
+			cmd = exec.Command(GetFinchDaemonExe(), //nolint:gosec // G204: This is a test file with controlled inputs
+				"--socket-addr", "/run/test.sock",
+				"--pidfile", "/run/test.pid",
+				"--rego-file", regoPath,
+				"--enable-middleware",
+				"--skip-rego-perm-check")
 
-		// 	// Start the process in background
-		// 	err = cmd.Start()
-		// 	Expect(err).NotTo(HaveOccurred())
+			// Start the process in background
+			err = cmd.Start()
+			Expect(err).NotTo(HaveOccurred())
 
-		// 	// Give it a moment to initialize
-		// 	time.Sleep(1 * time.Second)
+			// Give it a moment to initialize
+			time.Sleep(1 * time.Second)
 
-		// 	// Kill the process
-		// 	err = cmd.Process.Kill()
-		// 	Expect(err).NotTo(HaveOccurred())
-		// })
+			// Kill the process
+			err = cmd.Process.Kill()
+			Expect(err).NotTo(HaveOccurred())
+		})
 	})
 }
