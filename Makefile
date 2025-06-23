@@ -147,6 +147,7 @@ endif
 	
 
 DAEMON_DOCKER_HOST := "unix:///Applications/Finch/lima/data/finch/sock/finch.sock"
+# DAEMON_ROOT
 
 .PHONY: test-e2e-inside-vm
 test-e2e-inside-vm: macos

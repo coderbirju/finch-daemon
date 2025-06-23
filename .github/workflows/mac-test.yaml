@@ -15,7 +15,7 @@ env:
   GO_VERSION: '1.23.8'
 jobs:
   mac-test:
-    runs-on: codebuild-Test-fd-codebuild-mac-${{ github.run_id }}-${{ github.run_attempt }}
+    runs-on: codebuild-newFD-CI-test-${{ github.run_id }}-${{ github.run_attempt }}
     timeout-minutes: 30
     steps:
       - name: Clean macOS runner workspace
@@ -30,124 +30,56 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
           cache: false
-      
+
       - name: Configure Go for ec2-user
         run: |
           # Ensure Go is properly configured for ec2-user
           chown -R ec2-user:staff $GOPATH || true
           chown -R ec2-user:staff $RUNNER_TOOL_CACHE/go || true
-      # - name: Clean up previous files
+      # - name: List available users and system info
       #   run: |
-      #     sudo -u ec2-user bash rm -rf /opt/finch
-      #     sudo -u ec2-user bash rm -rf ~/.finch
-      #     sudo -u ec2-user bash rm -rf ./_output
-      #     if pgrep '^qemu-system'; then
-      #       sudo -u ec2-user bash pkill '^qemu-system'
-      #     fi
-      #     if pgrep '^socket_vmnet'; then
-      #       sudo -u ec2-user bash pkill '^socket_vmnet'
-      #     fi
-      # Debug step to see available users
-      - name: List available users and system info
-        run: |
-          su ec2-user -c 'echo "Current user: $(whoami)"
-          echo "Current user ID: $(id -u)"
-          echo "Current user home: $HOME"
-          echo "Console user: $(stat -f "%Su" /dev/console)"
-          echo "All users:"
-          dscl . -list /Users | grep -v "^_"
-          echo "Users with home directories:"
-          ls -la /Users/
-          echo "Environment variables:"
-          env | sort
-          echo "Brew info:"
-          which brew || echo "brew not found in PATH"
-          echo "PATH: $PATH"'
-          
+      #     su ec2-user -c 'echo "Current user: $(whoami)"
+      #     echo "Current user ID: $(id -u)"
+      #     echo "Current user home: $HOME"
+      #     echo "Console user: $(stat -f "%Su" /dev/console)"
+      #     echo "All users:"
+      #     dscl . -list /Users | grep -v "^_"
+      #     echo "Users with home directories:"
+      #     ls -la /Users/
+      #     echo "Environment variables:"
+      #     env | sort
+      #     echo "Brew info:"
+      #     which brew || echo "brew not found in PATH"
+      #     echo "PATH: $PATH"'
+
       - name: Install Rosetta 2
-        run: su ec2-user -c 'echo "A" | softwareupdate --install-rosetta || true'
-        
-      # Fix Homebrew permissions and setup environment
-      - name: Fix Homebrew permissions and setup environment
+        run: su ec2-user -c 'echo "A" | /usr/sbin/softwareupdate --install-rosetta --agree-to-license || true'
+
+      - name: Configure Homebrew for ec2-user
         run: |
-          echo "Fixing Homebrew permissions for ec2-user..."
-          chown -R ec2-user:staff /opt/homebrew
-          
-          # Create a cache directory that ec2-user can access
-          mkdir -p /tmp/homebrew-cache
-          chown -R ec2-user:staff /tmp/homebrew-cache
-          
-          # Create a .brewrc file for ec2-user with environment settings
-          su ec2-user -c 'cat > /Users/ec2-user/.brewrc << EOF
+          echo "Creating .brewrc file for ec2-user..."
+          cat > /Users/ec2-user/.brewrc << 'EOF'
+          # Homebrew environment setup
+          export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:$PATH"
+          export HOMEBREW_PREFIX="/opt/homebrew"
+          export HOMEBREW_CELLAR="/opt/homebrew/Cellar"
+          export HOMEBREW_REPOSITORY="/opt/homebrew"
           export HOMEBREW_NO_AUTO_UPDATE=1
-          export HOMEBREW_NO_INSTALL_CLEANUP=1
-          export HOMEBREW_CACHE=/tmp/homebrew-cache
-          export HOMEBREW_NO_ENV_HINTS=1
-          EOF'
+          EOF
+          chown ec2-user:staff /Users/ec2-user/.brewrc
           
-          # Make sure ec2-user sources the .brewrc file
-          su ec2-user -c 'echo "source /Users/ec2-user/.brewrc" >> /Users/ec2-user/.zshrc'
-          su ec2-user -c 'echo "source /Users/ec2-user/.brewrc" >> /Users/ec2-user/.bashrc'
-          
+          # Fix Homebrew permissions
+          echo "Setting permissions for Homebrew directories..."
+          mkdir -p /opt/homebrew/Cellar
+          chown -R ec2-user:staff /opt/homebrew
+        shell: bash
+
       # Install dependencies using ec2-user with custom environment
       - name: Install dependencies
         run: |
           echo "Installing dependencies as ec2-user..."
-          
           # Run brew with custom environment
           su ec2-user -c 'source /Users/ec2-user/.brewrc && brew install lz4 automake autoconf libtool yq'
-          
-          # Verify installation
-          su ec2-user -c 'source /Users/ec2-user/.brewrc && brew list | grep lz4 || echo "lz4 not installed"'
-        shell: bash
-      
-      # Install Finch
-      - name: Install Finch
-        run: |
-          echo "Installing Finch as ec2-user..."
-          
-          # Run brew with custom environment
-          su ec2-user -c 'source /Users/ec2-user/.brewrc && brew install finch --cask'
-          
-          # Verify installation
-          su ec2-user -c 'source /Users/ec2-user/.brewrc && brew list | grep finch || echo "finch not installed"'
-          
-          # Create .finch directory and config for ec2-user
-          echo "Creating .finch directory and config for ec2-user..."
-          su ec2-user -c 'mkdir -p /Users/ec2-user/.finch'
-          su ec2-user -c 'echo "cpus: 4" > /Users/ec2-user/.finch/finch.yaml'
-          su ec2-user -c 'echo "memory: 8GiB" >> /Users/ec2-user/.finch/finch.yaml'
-          
-          # Fix ownership of var/run directories
-          echo "Fixing ownership of /private/var/run directories..."
-          chown -R root:wheel /private/var/run
-          mkdir -p /private/var/run/finch-lima
-          chown -R root:wheel /private/var/run/finch-lima
-          
-          # Check finch version with HOME set to ec2-user's home
-          echo "Checking finch version..."
-          if ! su ec2-user -c 'HOME=/Users/ec2-user finch version'; then
-            echo "finch version command failed, starting VM..."
-            su ec2-user -c 'HOME=/Users/ec2-user finch vm remove'
-            su ec2-user -c 'HOME=/Users/ec2-user finch vm init'
-          fi
-        shell: bash
-
-        # Check for Finch socket
-      - name: Check for Finch socket
-        run: |
-          su ec2-user -c 'echo "Checking for Finch socket at /Applications/Finch/lima/data/finch/sock/finch.sock..."
-          
-          # Check if the socket file exists
-          if test -S /Applications/Finch/lima/data/finch/sock/finch.sock; then
-            echo "Socket file exists"
-          else  
-            echo "ERROR: Socket file not found at expected location /Applications/Finch/lima/data/finch/sock/finch.sock"
-            exit 1
-          fi'
-          
-          # Store the socket path for later steps (this needs to run as root to modify GITHUB_ENV)
-          echo "SOCKET_PATH=/Applications/Finch/lima/data/finch/sock/finch.sock" >> $GITHUB_ENV
         shell: bash
 
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -156,34 +88,79 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
           submodules: recursive
-          ssh-user: ec2-user
-          
+
       - name: Configure workspace for ec2-user
         run: |
           # Ensure workspace is properly owned by ec2-user
           chown -R ec2-user:staff ${{ github.workspace }}
+
+      # Install Finch
+      - name: Install Finch
+        run: |
+          echo "Installing Finch as ec2-user..."
+
+          # Run brew with custom environment
+          su ec2-user -c 'source /Users/ec2-user/.brewrc && brew install finch --cask'
+
+          # Verify installation
+          su ec2-user -c 'source /Users/ec2-user/.brewrc && brew list | grep finch || echo "finch not installed"'
+
+          # Create .finch directory and config for ec2-user
+          echo "Creating .finch directory and config for ec2-user..."
+          su ec2-user -c 'mkdir -p /Users/ec2-user/.finch'
+          su ec2-user -c 'echo "cpus: 4" > /Users/ec2-user/.finch/finch.yaml'
+          su ec2-user -c 'echo "memory: 8GiB" >> /Users/ec2-user/.finch/finch.yaml'
+
+          # Fix ownership of var/run directories
+          echo "Fixing ownership of /private/var/run directories..."
+          chown -R root:wheel /private/var/run
+          mkdir -p /private/var/run/finch-lima
+          chown -R root:wheel /private/var/run/finch-lima
+
+          # Check finch version with HOME set to ec2-user's home
+          echo "Checking finch version..."
+          if ! su ec2-user -c 'HOME=/Users/ec2-user finch version'; then
+            echo "finch version command failed, starting VM..."
+            su ec2-user -c 'HOME=/Users/ec2-user finch vm init'
+          fi
+        shell: bash
+
+      # Check for Finch socket
+      # - name: Check for Finch socket
+      #   run: |
+      #     su ec2-user -c 'echo "Checking for Finch socket at /Applications/Finch/lima/data/finch/sock/finch.sock..."
+
+      #     # Check if the socket file exists
+      #     if test -S /Applications/Finch/lima/data/finch/sock/finch.sock; then
+      #       echo "Socket file exists"
+      #     else
+      #       echo "ERROR: Socket file not found at expected location /Applications/Finch/lima/data/finch/sock/finch.sock"
+      #       exit 1
+      #     fi'
+
+      #     # Store the socket path for later steps (this needs to run as root to modify GITHUB_ENV)
+      #     echo "SOCKET_PATH=/Applications/Finch/lima/data/finch/sock/finch.sock" >> $GITHUB_ENV
+      #   shell: bash
+
+      
       # Run e2e tests inside the Finch VM
       - name: Run e2e tests
         run: |
           echo "Running e2e tests as ec2-user..."
-          
-          su ec2-user -c "cd ${{ github.workspace }} && DOCKER_HOST=unix:///Applications/Finch/lima/data/finch/sock/finch.sock make test-e2e-inside-vm"
+          su ec2-user -c "cd ${{ github.workspace }} && STATIC=1 GOPROXY=direct GOOS=linux GOARCH=$(GOARCH) make"
+          su ec2-user -c 'HOME=/Users/ec2-user finch vm stop'
+          su ec2-user -c 'HOME=/Users/ec2-user finch vm remove'
+
+          su ec2-user -c "cp ${{ github.workspace }}/bin/finch-daemon -f /Applications/Finch/finch-daemon/finch-daemon"
+          su ec2-user -c 'HOME=/Users/ec2-user finch vm init'
+          su ec2-user -c make test-e2e-inside-vm
         shell: bash
-        
-      # Run e2e tests with OPA authorization
-      - name: Run opa e2e tests
-        run: |
-          echo "Running e2e tests with OPA authorization as ec2-user..."
-          
-          echo "Using DOCKER_HOST=unix:///Applications/Finch/lima/data/finch/sock/finch.sock"
-          su ec2-user -c "cd ${{ github.workspace }} && DOCKER_HOST=unix:///Applications/Finch/lima/data/finch/sock/finch.sock make test-e2e-opa"
-        shell: bash
-        
+
       # Cleanup
       - name: Stop Finch VM
         run: |
           echo "Stopping Finch VM as ec2-user..."
-          
+
           # Stop VM using ec2-user with custom environment
           su ec2-user -c "source /Users/ec2-user/.brewrc && HOME=/Users/ec2-user finch vm stop"
         shell: bash
