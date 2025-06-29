@@ -105,24 +105,26 @@ jobs:
           # Verify installation
           su ec2-user -c 'source /Users/ec2-user/.brewrc && brew list | grep finch || echo "finch not installed"'
 
-          # Create .finch directory and config for ec2-user
-          echo "Creating .finch directory and config for ec2-user..."
-          su ec2-user -c 'mkdir -p /Users/ec2-user/.finch'
-          su ec2-user -c 'echo "cpus: 4" > /Users/ec2-user/.finch/finch.yaml'
-          su ec2-user -c 'echo "memory: 8GiB" >> /Users/ec2-user/.finch/finch.yaml'
+          # # Create .finch directory and config for ec2-user
+          # echo "Creating .finch directory and config for ec2-user..."
+          # su ec2-user -c 'mkdir -p /Users/ec2-user/.finch'
+          # su ec2-user -c 'echo "cpus: 4" > /Users/ec2-user/.finch/finch.yaml'
+          # su ec2-user -c 'echo "memory: 8GiB" >> /Users/ec2-user/.finch/finch.yaml'
 
-          # Fix ownership of var/run directories
-          echo "Fixing ownership of /private/var/run directories..."
-          chown -R root:wheel /private/var/run
+          # # Fix ownership of var/run directories
+          # echo "Fixing ownership of /private/var/run directories..."
+          
           mkdir -p /private/var/run/finch-lima
-          chown -R root:wheel /private/var/run/finch-lima
+          cat /etc/passwd
+          chown ec2-user:daemon /private/var/run/finch-lima
+          # chmod -R 775 /private/var/run/finch-lima
 
           # Check finch version with HOME set to ec2-user's home
-          echo "Checking finch version..."
-          if ! su ec2-user -c 'HOME=/Users/ec2-user finch version'; then
-            echo "finch version command failed, starting VM..."
-            su ec2-user -c 'HOME=/Users/ec2-user finch vm init'
-          fi
+          # echo "Checking finch version..."
+          # if ! su ec2-user -c 'finch version'; then
+          #   echo "finch version command failed, starting VM..."
+          #   su ec2-user -c 'finch vm start'
+          # fi
         shell: bash
 
       # Check for Finch socket
@@ -146,14 +148,14 @@ jobs:
       # Run e2e tests inside the Finch VM
       - name: Run e2e tests
         run: |
-          echo "Running e2e tests as ec2-user..."
-          su ec2-user -c "cd ${{ github.workspace }} && STATIC=1 GOPROXY=direct GOOS=linux GOARCH=$(GOARCH) make"
-          su ec2-user -c 'HOME=/Users/ec2-user finch vm stop'
-          su ec2-user -c 'HOME=/Users/ec2-user finch vm remove'
+          echo "Running e2e tests as root-user..."
+          su ec2-user -c 'cd ${{ github.workspace }} && STATIC=1 GOPROXY=direct GOOS=linux GOARCH=$(GOARCH) make'
+          # su ec2-user -c 'finch vm stop'
+          su ec2-user -c 'finch vm remove -f'
 
-          su ec2-user -c "cp ${{ github.workspace }}/bin/finch-daemon -f /Applications/Finch/finch-daemon/finch-daemon"
-          su ec2-user -c 'HOME=/Users/ec2-user finch vm init'
-          su ec2-user -c make test-e2e-inside-vm
+          cp -f ${{ github.workspace }}/bin/finch-daemon /Applications/Finch/finch-daemon/finch-daemon
+          su ec2-user -c 'finch vm init'
+          su ec2-user -c 'make test-e2e-inside-vm'
         shell: bash
 
       # Cleanup

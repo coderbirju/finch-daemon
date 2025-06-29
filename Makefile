@@ -151,7 +151,6 @@ DAEMON_DOCKER_HOST := "unix:///Applications/Finch/lima/data/finch/sock/finch.soc
 
 .PHONY: test-e2e-inside-vm
 test-e2e-inside-vm: macos
-	STATIC=1 GOPROXY=direct GOOS=linux GOARCH=$(GOARCH) make && \
 	DOCKER_HOST=$(DAEMON_DOCKER_HOST) \
 	DOCKER_API_VERSION="v1.41" \
 	TEST_E2E=1 \
