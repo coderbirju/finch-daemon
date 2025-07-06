@@ -15,7 +15,7 @@ env:
   GO_VERSION: '1.23.8'
 jobs:
   mac-test:
-    runs-on: codebuild-newFD-CI-test-${{ github.run_id }}-${{ github.run_attempt }}
+    runs-on: codebuild-finch-daemon-arm64-2-instance-${{ github.run_id }}-${{ github.run_attempt }}
     timeout-minutes: 30
     steps:
       - name: Clean macOS runner workspace
@@ -36,22 +36,6 @@ jobs:
           # Ensure Go is properly configured for ec2-user
           chown -R ec2-user:staff $GOPATH || true
           chown -R ec2-user:staff $RUNNER_TOOL_CACHE/go || true
-      # - name: List available users and system info
-      #   run: |
-      #     su ec2-user -c 'echo "Current user: $(whoami)"
-      #     echo "Current user ID: $(id -u)"
-      #     echo "Current user home: $HOME"
-      #     echo "Console user: $(stat -f "%Su" /dev/console)"
-      #     echo "All users:"
-      #     dscl . -list /Users | grep -v "^_"
-      #     echo "Users with home directories:"
-      #     ls -la /Users/
-      #     echo "Environment variables:"
-      #     env | sort
-      #     echo "Brew info:"
-      #     which brew || echo "brew not found in PATH"
-      #     echo "PATH: $PATH"'
-
       - name: Install Rosetta 2
         run: su ec2-user -c 'echo "A" | /usr/sbin/softwareupdate --install-rosetta --agree-to-license || true'
 
@@ -104,46 +88,11 @@ jobs:
 
           # Verify installation
           su ec2-user -c 'source /Users/ec2-user/.brewrc && brew list | grep finch || echo "finch not installed"'
-
-          # # Create .finch directory and config for ec2-user
-          # echo "Creating .finch directory and config for ec2-user..."
-          # su ec2-user -c 'mkdir -p /Users/ec2-user/.finch'
-          # su ec2-user -c 'echo "cpus: 4" > /Users/ec2-user/.finch/finch.yaml'
-          # su ec2-user -c 'echo "memory: 8GiB" >> /Users/ec2-user/.finch/finch.yaml'
-
-          # # Fix ownership of var/run directories
-          # echo "Fixing ownership of /private/var/run directories..."
           
           mkdir -p /private/var/run/finch-lima
           cat /etc/passwd
           chown ec2-user:daemon /private/var/run/finch-lima
-          # chmod -R 775 /private/var/run/finch-lima
-
-          # Check finch version with HOME set to ec2-user's home
-          # echo "Checking finch version..."
-          # if ! su ec2-user -c 'finch version'; then
-          #   echo "finch version command failed, starting VM..."
-          #   su ec2-user -c 'finch vm start'
-          # fi
         shell: bash
-
-      # Check for Finch socket
-      # - name: Check for Finch socket
-      #   run: |
-      #     su ec2-user -c 'echo "Checking for Finch socket at /Applications/Finch/lima/data/finch/sock/finch.sock..."
-
-      #     # Check if the socket file exists
-      #     if test -S /Applications/Finch/lima/data/finch/sock/finch.sock; then
-      #       echo "Socket file exists"
-      #     else
-      #       echo "ERROR: Socket file not found at expected location /Applications/Finch/lima/data/finch/sock/finch.sock"
-      #       exit 1
-      #     fi'
-
-      #     # Store the socket path for later steps (this needs to run as root to modify GITHUB_ENV)
-      #     echo "SOCKET_PATH=/Applications/Finch/lima/data/finch/sock/finch.sock" >> $GITHUB_ENV
-      #   shell: bash
-
       
       # Run e2e tests inside the Finch VM
       - name: Run e2e tests
