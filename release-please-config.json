@@ -58,5 +58,5 @@
         ".": {}
     },
     "pull-request-header": "Ready for new finch release - Please verify the checklist items in the bottom of this PR before merging",
-    "pull-request-footer": "-[ ] The Sync Submodules wortkflow has completed successfully in finch-core repo."
+    "pull-request-footer": "---\n\n### 🤖 Automated Release Process\n\nThis PR was generated automatically by [release-please](https://github.com/googleapis/release-please).\n\n**To complete the release:**\n1. Review the changes above\n2. Merge this PR\n3. Packages will be automatically published to npm\n4. GitHub release will be created with tags\n\n**Need to make changes?** Push additional commits to master and this PR will be updated automatically."
 }
