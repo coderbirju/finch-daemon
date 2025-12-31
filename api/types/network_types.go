@@ -211,7 +211,7 @@ type NetworkInspectResponse struct {
 	// Attachable bool           `json:"Attachable"`
 	// Ingress    bool           `json:"Ingress"`
 	IPAM       dockercompat.IPAM                        `json:"IPAM,omitempty"`
-	Containers map[string]dockercompat.EndpointResource `json:"Containers,omitempty"` // Containers
+	Containers map[string]dockercompat.EndpointResource `json:"Containers"` // Containers
 	// Options    OptionsType    `json:"Options"`
 	Labels map[string]string `json:"Labels,omitempty"`
 }

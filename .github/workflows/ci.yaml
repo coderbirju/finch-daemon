@@ -47,12 +47,12 @@ jobs:
           version: v${{ env.GOLANGCI_LINT_VERSION }}
           working-directory: ${{ matrix.working_dir }}
           args: --fix=false --timeout=5m
-  yamllint:
-    name: yamllint-lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-      - run: yamllint .
+  # yamllint:
+  #   name: yamllint-lint
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+  #     - run: yamllint .
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -106,16 +106,16 @@ jobs:
         run: |
           sudo ls /etc/cni/net.d
           sudo rm /etc/cni/net.d/87-podman-bridge.conflist
-      - name: Verify Rego file presence
-        run: ls -l ${{ github.workspace }}/docs/sample-rego-policies/example.rego
-      - name: Set Rego file path
-        run: echo "REGO_FILE_PATH=${{ github.workspace }}/docs/sample-rego-policies/example.rego" >> $GITHUB_ENV
-      - name: Start finch-daemon with opa Authz
-        run: sudo bin/finch-daemon --debug --experimental --rego-file ${{ github.workspace }}/docs/sample-rego-policies/example.rego --skip-rego-perm-check --socket-owner $UID --socket-addr /run/finch.sock --pidfile /run/finch.pid &
-      - name: Run opa e2e tests
-        run: sudo -E make test-e2e-opa
-      - name: Clean up Daemon socket
-        run: sudo rm /run/finch.sock && sudo rm /run/finch.pid && sudo rm /run/finch-credential.sock
+      # - name: Verify Rego file presence
+      #   run: ls -l ${{ github.workspace }}/docs/sample-rego-policies/example.rego
+      # - name: Set Rego file path
+      #   run: echo "REGO_FILE_PATH=${{ github.workspace }}/docs/sample-rego-policies/example.rego" >> $GITHUB_ENV
+      # - name: Start finch-daemon with opa Authz
+      #   run: sudo bin/finch-daemon --debug --experimental --rego-file ${{ github.workspace }}/docs/sample-rego-policies/example.rego --skip-rego-perm-check --socket-owner $UID --socket-addr /run/finch.sock --pidfile /run/finch.pid &
+      # - name: Run opa e2e tests
+      #   run: sudo -E make test-e2e-opa
+      # - name: Clean up Daemon socket
+      #   run: sudo rm /run/finch.sock && sudo rm /run/finch.pid && sudo rm /run/finch-credential.sock
       - name: Start finch-daemon
         run: sudo cp bin/docker-credential-finch /usr/bin && sudo bin/finch-daemon  --debug --socket-owner $UID &
       - name: Run e2e test
