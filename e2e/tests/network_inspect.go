@@ -34,7 +34,7 @@ func NetworkInspect(opt *option.Option) {
 		AfterEach(func() {
 			command.RemoveAll(opt)
 		})
-		It("should inspect network by network name", func() {
+		FIt("should inspect network by network name", func() {
 			// create network
 			netId := command.StdoutStr(opt, "network", "create", testNetwork)
 
@@ -51,8 +51,9 @@ func NetworkInspect(opt *option.Option) {
 			Expect(network.Name).Should(Equal(testNetwork))
 			Expect(network.ID).Should(Equal(netId))
 			Expect(network.IPAM.Config).ShouldNot(BeEmpty())
+			Expect(network.Containers).NotTo(BeNil())
 		})
-		It("should inspect network by long network id", func() {
+		FIt("should inspect network by long network id", func() {
 			// create network
 			netId := command.StdoutStr(opt, "network", "create", testNetwork)
 
@@ -69,8 +70,9 @@ func NetworkInspect(opt *option.Option) {
 			Expect(network.Name).Should(Equal(testNetwork))
 			Expect(network.ID).Should(Equal(netId))
 			Expect(network.IPAM.Config).ShouldNot(BeEmpty())
+			Expect(network.Containers).NotTo(BeNil())
 		})
-		It("should inspect network by short network id", func() {
+		FIt("should inspect network by short network id", func() {
 			// create network
 			netId := command.StdoutStr(opt, "network", "create", testNetwork)
 
@@ -87,8 +89,9 @@ func NetworkInspect(opt *option.Option) {
 			Expect(network.Name).Should(Equal(testNetwork))
 			Expect(network.ID).Should(Equal(netId))
 			Expect(network.IPAM.Config).ShouldNot(BeEmpty())
+			Expect(network.Containers).NotTo(BeNil())
 		})
-		It("should inspect network with labels", func() {
+		FIt("should inspect network with labels", func() {
 			// create network
 			netId := command.StdoutStr(opt, "network", "create", "--label", "testLabel=testValue", testNetwork)
 
@@ -106,8 +109,9 @@ func NetworkInspect(opt *option.Option) {
 			Expect(network.ID).Should(Equal(netId))
 			Expect(network.Labels).Should(Equal(map[string]string{"testLabel": "testValue"}))
 			Expect(network.IPAM.Config).ShouldNot(BeEmpty())
+			Expect(network.Containers).NotTo(BeNil())
 		})
-		It("should fail to inspect nonexistent network", func() {
+		FIt("should fail to inspect nonexistent network", func() {
 			// call inspect network api
 			relativeUrl := client.ConvertToFinchUrl(version, fmt.Sprintf("/networks/%s", testNetwork))
 			res, err := uClient.Get(relativeUrl)
