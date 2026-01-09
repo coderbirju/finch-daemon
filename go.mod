@@ -206,3 +206,5 @@ replace cyphar.com/go-pathrs => github.com/cyphar/libpathrs/go-pathrs v0.2.1
 
 // Pin docker cli version to v28.5.2+incompatible until we migrate to moby/moby/v2
 replace github.com/docker/cli => github.com/docker/cli v28.5.2+incompatible
+
+replace github.com/containerd/nerdctl/v2 => github.com/coderbirju/nerdctl/v2 v2.3.1
